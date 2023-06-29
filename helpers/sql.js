@@ -1,6 +1,21 @@
 const { BadRequestError } = require("../expressError");
 
-// THIS NEEDS SOME GREAT DOCUMENTATION.
+/** Creates a string for use in a query and an array of values
+ * 
+ * dataToUpdate is a dictionary object:   { name: "value", ... }
+ * Each dataToUpdate's "value" is added to an array
+ * 
+ * jsToSql is a dictionary object:        { name: "col_name_in_DB", ... }
+ * Each jsToSql item is mapped as:        "col_name_in_DB"=$<idx>
+ *        where <idx> = the count/# of each column to be updated
+ * 
+ * Returns an object like:
+ *      {
+ *          setCols: '"col_X_in_DB"=$1,  "col_Y_in_DB"=$2',
+ *          values: ['value1', 'value2']
+ *      }
+*/
+  
 
 function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   const keys = Object.keys(dataToUpdate);
