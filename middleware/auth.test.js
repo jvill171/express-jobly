@@ -1,11 +1,13 @@
 "use strict";
 
 const jwt = require("jsonwebtoken");
-const { UnauthorizedError } = require("../expressError");
+const { UnauthorizedError, ForbiddenError } = require("../expressError");
 const {
   authenticateJWT,
   ensureLoggedIn,
   ensureAdminLoggedIn,
+  ensureOwnerOrAdmin,
+  preventGainAdmin,
 } = require("./auth");
 
 
@@ -109,5 +111,90 @@ describe("ensureAdminLoggedIn", function () {
       expect(err instanceof UnauthorizedError).toBeTruthy();
     };
     ensureAdminLoggedIn(req, res, next);
+  });
+});
+
+
+describe("ensureOwnerOrAdmin", function () {
+  test("works: is owner, is admin", function () {
+    expect.assertions(1);
+    const req = { params:{ username: "Me" } };
+    const res = { locals:{ user:{ username: "Me", isAdmin: true } } };
+    const next = function (err) {
+      expect(err).toBeFalsy();
+    };
+    ensureOwnerOrAdmin(req, res, next);
+  });
+
+  test("works: not owner, is admin", function () {
+    expect.assertions(1);
+    const req = { params:{ username: "NotMe" } };
+    const res = { locals:{ user:{ username: "Me", isAdmin: true } } };
+    const next = function (err) {
+      expect(err).toBeFalsy();
+    };
+    ensureOwnerOrAdmin(req, res, next);
+  });
+  
+  test("works: is owner, not admin", function () {
+    expect.assertions(1);
+    const req = { params:{ username: "Me" } };
+    const res = { locals:{ user:{ username: "Me", isAdmin: false } } };
+    const next = function (err) {
+      expect(err).toBeFalsy();
+    };
+    ensureOwnerOrAdmin(req, res, next);
+  });
+  
+  test("unauthorized: not owner, not admin", function () {
+    expect.assertions(1);
+    const req = { params:{ username: "NotMe" } };
+    const res = { locals:{ user:{ username: "Me", isAdmin: false } } };
+    const next = function (err) {
+      expect(err instanceof UnauthorizedError).toBeTruthy();
+    };
+    ensureOwnerOrAdmin(req, res, next);
+  });
+});
+
+describe("preventGainAdmin", function () {
+  test("works: admin, NOT modifying isAdmin", function () {
+    expect.assertions(1);
+    const req = { body:{ } };
+    const res = { locals:{ user:{ username: "Me", isAdmin: true } } };
+    const next = function (err) {
+      expect(err).toBeFalsy();
+    };
+    preventGainAdmin(req, res, next);
+  });
+
+  test("works: admin, modifying isAdmin", function () {
+    expect.assertions(1);
+    const req = { body:{ isAdmin: true } };
+    const res = { locals:{ user:{ username: "Me", isAdmin: true } } };
+    const next = function (err) {
+      expect(err).toBeFalsy();
+    };
+    preventGainAdmin(req, res, next);
+  });
+
+  test("works: NOT admin, NOT modifying isAdmin", function () {
+    expect.assertions(1);
+    const req = { body:{ } };
+    const res = { locals:{ user:{ username: "Me", isAdmin: false } } };
+    const next = function (err) {
+      expect(err).toBeFalsy();
+    };
+    preventGainAdmin(req, res, next);
+  });
+
+  test("forbidden: NOT admin, modifying isAdmin", function () {
+    expect.assertions(1);
+    const req = { body:{ isAdmin: true } };
+    const res = { locals:{ user:{ username: "Me", isAdmin: false } } };
+    const next = function (err) {
+      expect(err instanceof ForbiddenError).toBeTruthy();
+    };
+    preventGainAdmin(req, res, next);
   });
 });
