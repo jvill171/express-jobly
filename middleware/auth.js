@@ -4,7 +4,7 @@
 
 const jwt = require("jsonwebtoken");
 const { SECRET_KEY } = require("../config");
-const { UnauthorizedError } = require("../expressError");
+const { UnauthorizedError, ForbiddenError } = require("../expressError");
 
 
 /** Middleware: Authenticate user.
@@ -42,6 +42,11 @@ function ensureLoggedIn(req, res, next) {
   }
 }
 
+
+/** Middleware to use when they must be logged in AS AN ADMIN.
+ *
+ * If not, raises Unauthorized.
+ */
 function ensureAdminLoggedIn(req, res, next) {
   try {
     if (!res.locals.user || !res.locals.user.isAdmin) throw new UnauthorizedError();
@@ -51,9 +56,44 @@ function ensureAdminLoggedIn(req, res, next) {
   }
 }
 
+/** Middleware to use when they must be logged in as the Owner OR Admin.
+ *
+ * If not, raises Unauthorized.
+ */
+function ensureOwnerOrAdmin(req, res, next) {
+  try {
+    // If not NOT (owner || admin) 
+    if(!(req.params.username === res.locals.user.username || res.locals.user.isAdmin)){
+      throw new UnauthorizedError();
+    }
+    return next();
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/** Middleware to use when preventing privilege escalation. 
+ *
+ * Prvents regular user from updating their privilages to have admin rights
+ * 
+ * If not, raises Unauthorized.
+ */
+function preventGainAdmin(req, res, next){
+  try{
+    // If is owner (non-admin) and attempting to gain admin rights, prevent it.
+    if((!res.locals.user.isAdmin) && req.body.isAdmin === true){
+      throw new ForbiddenError();
+    }
+    return next();
+  } catch (err) {
+    return next(err);
+  }
+}
 
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
-  ensureAdminLoggedIn
+  ensureAdminLoggedIn, 
+  ensureOwnerOrAdmin,
+  preventGainAdmin,
 };
