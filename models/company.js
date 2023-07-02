@@ -2,7 +2,7 @@
 
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForPartialUpdate } = require("../helpers/sql");
+const { sqlForPartialUpdate, companyFiltering } = require("../helpers/sql");
 
 /** Related functions for companies. */
 
@@ -139,6 +139,47 @@ class Company {
     const company = result.rows[0];
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
+  }
+
+  /** Find all companies that meet filtered criteria.
+   *
+   * Filtered criteria includes: name, num_employees (minimum), num_employees (maximum)
+   *    represented by name, emin, and emax respectively.
+   * 
+   * data can include: { name, emin, emax }
+   * note: any item not listed in the example above is ignored.
+   *
+   * Returns {handle, name, description, numEmployees, logoUrl} for each company found
+   *
+   * Throws NotFoundError if no company meeets criteria.
+   */
+  static async filter(data){
+    let colNames = {};
+    if(data.name) colNames["name"] = "name";
+    if(data.emin) colNames["emin"] = "num_employees";
+    if(data.emax) colNames["emax"] = "num_employees";
+    
+    // Remove any undesired property from data
+    for(const prop in data){
+      if(!colNames[prop]) delete data[prop]
+    }
+
+    const {filterCols, values} = companyFiltering(colNames, data)
+    const companyRes = await db.query(
+      `SELECT handle,
+              name,
+              description,
+              num_employees AS "numEmployees",
+              logo_url AS "logoUrl"
+       FROM companies
+       WHERE ${filterCols}`
+       , [...values]);
+    
+    const companies = companyRes.rows;
+
+    if (companies.length == 0) throw new NotFoundError(`No company found matching criteria.`);
+
+    return companies; 
   }
 }
 

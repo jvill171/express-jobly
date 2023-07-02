@@ -206,3 +206,61 @@ describe("remove", function () {
     }
   });
 });
+
+
+
+/************************************** filter */
+
+describe("filter", ()=>{
+  test("works: name, emin, emax", async()=>{
+    const res = await Company.filter({
+      name: 'c1',
+      emin: '1',
+      emax: '10'
+    });
+    expect(res.length).toEqual(1);
+    expect(res[0].name).toBe("C1")
+  })
+    
+  test("works: partial name only", async()=>{
+    const res = await Company.filter({
+      name: 'c'
+    });
+    expect(res.length).toEqual(3);
+    expect(res[0].name).toBe("C1")
+  });
+
+  test("works: emin only", async()=>{
+    const res = await Company.filter({
+      emin: '2'
+    });
+    expect(res.length).toEqual(2);
+    expect(res[0].name).toBe("C2")
+  });
+
+  test("works: emax only", async()=>{
+    const res = await Company.filter({
+      emax: '2'
+    });
+    expect(res.length).toEqual(2);
+    expect(res[0].name).toBe("C1")
+  });
+  
+  test("works: ignores irrelevant query item", async()=>{
+    const res = await Company.filter({
+      name: 'C2',
+      baddata:'extra query item'
+    });
+    expect(res.length).toEqual(1);
+    expect(res[0].name).toBe("C2")
+  });
+
+  test("not found: no company meets criteria", async()=>{
+    try{
+      await Company.filter({ name: 'z' });
+      fail();
+    } catch(err){
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+});
