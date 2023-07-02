@@ -5,7 +5,7 @@
 const jsonschema = require("jsonschema");
 const express = require("express");
 
-const { BadRequestError } = require("../expressError");
+const { BadRequestError, ExpressError } = require("../expressError");
 const { ensureLoggedIn } = require("../middleware/auth");
 const Company = require("../models/company");
 
@@ -51,7 +51,22 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
  */
 
 router.get("/", async function (req, res, next) {
+  let {name, emin, emax} = req.query;
+
   try {
+    // Ensure only Company.filter() if inclucdes these fields in query
+    if(name || emin || emax){
+      // if undefined, query item was not provided
+      if((emin != undefined && isNaN(parseInt(emin))) || (emax != undefined && isNaN(parseInt(emax)))){
+        throw new ExpressError(`emin & emax must be a number but received: { emin: ${emin}, emax: ${emax} }`, 400)
+      }else if(emin > emax){
+        throw new ExpressError(`emin must be less than emax: { emin: ${emin}, emax: ${emax} }`, 400)
+      }
+      // emin & emax have been verified to be a number && emin < emax
+      const companies = await Company.filter(req.query)
+      return res.json({ companies });
+    }
+
     const companies = await Company.findAll();
     return res.json({ companies });
   } catch (err) {
