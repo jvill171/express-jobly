@@ -12,6 +12,7 @@ const {
   commonAfterAll,
   u1Token,
 } = require("./_testCommon");
+const { ExpressError } = require("../expressError");
 
 beforeAll(commonBeforeAll);
 beforeEach(commonBeforeEach);
@@ -106,6 +107,119 @@ describe("GET /companies", function () {
         .set("authorization", `Bearer ${u1Token}`);
     expect(resp.statusCode).toEqual(500);
   });
+
+  //----------------- GET /companies (with query strings) -----------------
+
+  test("works: query string", async function () {
+    const resp = await request(app).get("/companies?name=c");
+    expect(resp.body).toEqual({
+      companies:
+          [
+            {
+              handle: "c1",
+              name: "C1",
+              description: "Desc1",
+              numEmployees: 1,
+              logoUrl: "http://c1.img",
+            },
+            {
+              handle: "c2",
+              name: "C2",
+              description: "Desc2",
+              numEmployees: 2,
+              logoUrl: "http://c2.img",
+            },
+            {
+              handle: "c3",
+              name: "C3",
+              description: "Desc3",
+              numEmployees: 3,
+              logoUrl: "http://c3.img",
+            },
+          ],
+    });
+  });
+
+  test("query string, includes extra query item (ignored)", async function () {
+    const resp = await request(app).get("/companies?emin=2&baddata=notgood");
+    expect(resp.body).toEqual({
+      companies:
+          [
+            {
+              handle: "c2",
+              name: "C2",
+              description: "Desc2",
+              numEmployees: 2,
+              logoUrl: "http://c2.img",
+            },
+            {
+              handle: "c3",
+              name: "C3",
+              description: "Desc3",
+              numEmployees: 3,
+              logoUrl: "http://c3.img",
+            },
+          ],
+    });
+  });
+
+  test("query string, ONLY extra query item (ignored)", async function () {
+    const resp = await request(app).get("/companies?baddata=notgood");
+    expect(resp.body).toEqual({
+      companies:
+        [
+          {
+            handle: "c1",
+            name: "C1",
+            description: "Desc1",
+            numEmployees: 1,
+            logoUrl: "http://c1.img",
+          },
+          {
+            handle: "c2",
+            name: "C2",
+            description: "Desc2",
+            numEmployees: 2,
+            logoUrl: "http://c2.img",
+          },
+          {
+            handle: "c3",
+            name: "C3",
+            description: "Desc3",
+            numEmployees: 3,
+            logoUrl: "http://c3.img",
+          },
+        ],
+    });
+  });
+
+  test("error: query string, emin > emax", async function () {
+    try{
+      await request(app).get("/companies?emin=10&emax=1");
+      // fail()
+    } catch(err){
+      expect(err instanceof ExpressError).toBeTruthy()
+    }
+  });
+
+  test("error: query string, emin is NaN", async function () {
+    try{
+      await request(app).get("/companies?emin=nope&emax=1");
+      // fail()
+    } catch(err){
+      expect(err instanceof ExpressError).toBeTruthy()
+    }
+  });
+
+  test("error: query string, emin is empty", async function () {
+    try{
+      await request(app).get("/companies?emin=&emax=1");
+      // fail()
+    } catch(err){
+      expect(err instanceof ExpressError).toBeTruthy()
+    }
+  });
+
 });
 
 /************************************** GET /companies/:handle */
