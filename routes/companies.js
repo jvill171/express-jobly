@@ -21,7 +21,7 @@ const router = new express.Router();
  *
  * Returns { handle, name, description, numEmployees, logoUrl }
  *
- * Authorization required: login
+ * Authorization required: Admin
  */
 
 router.post("/", ensureAdminLoggedIn, async function (req, res, next) {
@@ -43,9 +43,9 @@ router.post("/", ensureAdminLoggedIn, async function (req, res, next) {
  *   { companies: [ { handle, name, description, numEmployees, logoUrl }, ...] }
  *
  * Can filter on provided search filters:
- * - minEmployees
- * - maxEmployees
- * - nameLike (will find case-insensitive, partial matches)
+ * - emin (minimum num_employees)
+ * - emax (maximum num_employees)
+ * - name (will find case-insensitive company name, partial matches)
  *
  * Authorization required: none
  */
@@ -99,7 +99,7 @@ router.get("/:handle", async function (req, res, next) {
  *
  * Returns { handle, name, description, numEmployees, logo_url }
  *
- * Authorization required: login
+ * Authorization required: Admin
  */
 
 router.patch("/:handle", ensureAdminLoggedIn, async function (req, res, next) {
@@ -119,7 +119,7 @@ router.patch("/:handle", ensureAdminLoggedIn, async function (req, res, next) {
 
 /** DELETE /[handle]  =>  { deleted: handle }
  *
- * Authorization: login
+ * Authorization: Admin
  */
 
 router.delete("/:handle", ensureAdminLoggedIn, async function (req, res, next) {

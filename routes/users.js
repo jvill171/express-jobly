@@ -24,7 +24,7 @@ const router = express.Router();
  * This returns the newly created user and an authentication token for them:
  *  {user: { username, firstName, lastName, email, isAdmin }, token }
  *
- * Authorization required: login
+ * Authorization required: Admin
  **/
 
 router.post("/", ensureAdminLoggedIn, async function (req, res, next) {
@@ -48,7 +48,7 @@ router.post("/", ensureAdminLoggedIn, async function (req, res, next) {
  *
  * Returns list of all users.
  *
- * Authorization required: login
+ * Authorization required: Admin
  **/
 
 router.get("/", ensureAdminLoggedIn, async function (req, res, next) {
@@ -65,7 +65,7 @@ router.get("/", ensureAdminLoggedIn, async function (req, res, next) {
  *
  * Returns { username, firstName, lastName, isAdmin }
  *
- * Authorization required: login
+ * Authorization required: login as Owner or Admin
  **/
 
 router.get("/:username", ensureLoggedIn, ensureOwnerOrAdmin, async function (req, res, next) {
@@ -86,7 +86,8 @@ router.get("/:username", ensureLoggedIn, ensureOwnerOrAdmin, async function (req
  *
  * Returns { username, firstName, lastName, email, isAdmin }
  *
- * Authorization required: login
+ * Authorization required: login as either Owner or Admin
+ * NOTE: only admin can change is_admin.
  **/
 
 router.patch("/:username", ensureLoggedIn, ensureOwnerOrAdmin, preventGainAdmin, async function (req, res, next) {
@@ -106,7 +107,7 @@ router.patch("/:username", ensureLoggedIn, ensureOwnerOrAdmin, preventGainAdmin,
 
 /** DELETE /[username]  =>  { deleted: username }
  *
- * Authorization required: login
+ * Authorization required: login as either Owner or Admin
  **/
 
 router.delete("/:username", ensureLoggedIn, ensureOwnerOrAdmin, async function (req, res, next) {
