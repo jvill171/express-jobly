@@ -2,7 +2,7 @@
 
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForPartialUpdate } = require("../helpers/sql");
+const { sqlForPartialUpdate, sqlForFiltering } = require("../helpers/sql");
 
 /** Related functions for companies. */
 
@@ -146,14 +146,65 @@ class Job {
      * data can include: { t, smin, eq }
      * note: any items not listed in the example above is ignored
      * 
-     * Returns  { title, salary, equity, companyHandle } for each company found
+     * Returns  { id, title, salary, equity, companyHandle } for each company found
      * 
      * Throws NotFoundError if no company meets criteria.
      */
 
 
-    static async filter(data){
-        return "TO DO - FILTER"
+    static async filter({t, smin, eq}){
+        let colNames = {};
+        let action = {};
+
+        if(t){
+             colNames["t"] = "title";
+             action["t"] = "ILIKE";
+        }
+        if(smin){
+             colNames["smin"] = "salary";
+             action["smin"] = ">=";
+        }
+        if(eq){
+            // Validate eq is boolean value "true" or "false"
+            if (eq.toLowerCase() === 'true' || eq.toLowerCase() === 't' ){
+                colNames["eq"] = "equity";
+                eq = '0';
+                action["eq"] = ">";
+            }
+            else if (eq.toLowerCase() === 'false' || eq.toLowerCase() === 'f' ){
+                // pretend eq wasnt received
+                eq = undefined
+            }
+            else
+                throw new BadRequestError(`Invalid equity '${eq}': equity may only be 'true' or 'false'`)
+        }
+        
+        let filterData = {t, smin, eq}
+        const {filterCols, values} = sqlForFiltering(colNames, filterData, action)
+
+        const baseQuery =
+        `SELECT id,
+                title,
+                salary,
+                equity,
+                company_handle AS "companyHandle"
+         FROM jobs`
+
+        // Needed due to the fact eq can be modified to be undefined,
+        // thus breaking the query when using sqlForFiltering()
+        // By having empty filterCols & values
+        let queryFilters = '';
+        if(t || smin || eq){
+            queryFilters = ` WHERE ${filterCols}`
+        }
+        const endQuery = baseQuery + queryFilters;
+
+        const jobRes = await db.query( endQuery, [...values]);
+        const jobs = jobRes.rows;
+
+        if(jobs.length == 0) throw new NotFoundError(`No job found matching criteria.`);
+
+        return jobs
     }
 
 }
