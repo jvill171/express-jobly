@@ -255,6 +255,24 @@ describe("filter", ()=>{
     expect(res[0].name).toBe("C2")
   });
 
+  test("bad request: emin > emax", async()=>{
+    try{
+      await Company.filter({ emin: 20, emax: 1 });
+      fail();
+    } catch(err){
+      expect(err instanceof BadRequestError).toBeTruthy();
+    }
+  });
+
+  test("bad request: emin/emax isNaN", async()=>{
+    try{
+      await Company.filter({ emin: "notANumber", emax: "but text"});
+      fail();
+    } catch(err){
+      expect(err instanceof BadRequestError).toBeTruthy();
+    }
+  });
+
   test("not found: no company meets criteria", async()=>{
     try{
       await Company.filter({ name: 'z' });
