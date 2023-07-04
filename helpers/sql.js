@@ -50,13 +50,18 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
 */
 
 function companyFiltering(colNames, dataToFilter){
+
   const keys = Object.keys(colNames);
 
-  if(keys.includes("name")) dataToFilter.name = `%${dataToFilter.name}%`
+  // Ensure proper format for ILIKE
+  if(keys.includes("name")){
+    dataToFilter.name = `%${dataToFilter.name}%`
+  }
+  const values = Object.keys(colNames).map(key=>dataToFilter[key]);
 
   const filterCols = keys.map((curCol, idx)=>{
     let action;
-    if(keys[idx] === 'name') action = " ILIKE ";
+         if(keys[idx] === 'name') action = " ILIKE ";
     else if(keys[idx] === 'emin') action = ">=";
     else if(keys[idx] === 'emax') action = "<=";
 
@@ -65,7 +70,7 @@ function companyFiltering(colNames, dataToFilter){
   
   return {
     filterCols: filterCols.join(" AND "),
-    values: Object.values(dataToFilter)
+    values
   }
 }
 
