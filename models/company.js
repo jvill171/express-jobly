@@ -2,7 +2,7 @@
 
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForPartialUpdate, companyFiltering } = require("../helpers/sql");
+const { sqlForPartialUpdate, sqlForFiltering } = require("../helpers/sql");
 
 /** Related functions for companies. */
 
@@ -153,10 +153,8 @@ class Company {
    *
    * Throws NotFoundError if no company meeets criteria.
    */
-  static async filter(data){
-    let { name, emin, emax } = data;
-    
-    // VALIDATE DATA
+  static async filter({ name, emin, emax }){
+    // Validate emin && emax if
     if((emin != undefined && isNaN(parseInt(emin))) || (emax != undefined && isNaN(parseInt(emax)))){
       throw new BadRequestError(`emin & emax must be a number but received: { emin: ${emin}, emax: ${emax} }`)
     }else if(emin > emax){
@@ -166,11 +164,24 @@ class Company {
     let filterData = { name, emin, emax }
 
     let colNames = {};
-    if(name) colNames["name"] = "name";
-    if(emin) colNames["emin"] = "num_employees";
-    if(emax) colNames["emax"] = "num_employees";
+    let action = {};
 
-    const {filterCols, values} = companyFiltering(colNames, filterData)
+    if(name){
+       colNames["name"] = "name"
+       action["name"] = "ILIKE"
+    };
+
+    if(emin){
+       colNames["emin"] = "num_employees"
+       action["emin"] = ">="
+    };
+
+    if(emax){
+       colNames["emax"] = "num_employees"
+       action["emax"] = "<="
+    };
+    
+    const {filterCols, values} = sqlForFiltering(colNames, filterData, action)
     const companyRes = await db.query(
       `SELECT handle,
               name,
