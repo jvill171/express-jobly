@@ -154,17 +154,23 @@ class Company {
    * Throws NotFoundError if no company meeets criteria.
    */
   static async filter(data){
-    let colNames = {};
-    if(data.name) colNames["name"] = "name";
-    if(data.emin) colNames["emin"] = "num_employees";
-    if(data.emax) colNames["emax"] = "num_employees";
+    let { name, emin, emax } = data;
     
-    // Remove any undesired property from data
-    for(const prop in data){
-      if(!colNames[prop]) delete data[prop]
+    // VALIDATE DATA
+    if((emin != undefined && isNaN(parseInt(emin))) || (emax != undefined && isNaN(parseInt(emax)))){
+      throw new BadRequestError(`emin & emax must be a number but received: { emin: ${emin}, emax: ${emax} }`)
+    }else if(emin > emax){
+      throw new BadRequestError(`emin must be less than emax: { emin: ${emin}, emax: ${emax} }`)
     }
+    // Create new object to send
+    let filterData = { name, emin, emax }
 
-    const {filterCols, values} = companyFiltering(colNames, data)
+    let colNames = {};
+    if(name) colNames["name"] = "name";
+    if(emin) colNames["emin"] = "num_employees";
+    if(emax) colNames["emax"] = "num_employees";
+
+    const {filterCols, values} = companyFiltering(colNames, filterData)
     const companyRes = await db.query(
       `SELECT handle,
               name,
@@ -178,7 +184,6 @@ class Company {
     const companies = companyRes.rows;
 
     if (companies.length == 0) throw new NotFoundError(`No company found matching criteria.`);
-
     return companies; 
   }
 }
