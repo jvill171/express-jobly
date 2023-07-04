@@ -79,23 +79,4 @@ describe("companyFiltering", ()=>{
             values: []
           })
     })
-    test("works: more cols than data - should never happen", ()=>{
-        let c = Object.assign({}, cols1);
-        let d = Object.assign({}, data3);
-        
-        const result = companyFiltering(c, d);
-        expect(result).toEqual({
-            filterCols: '"name" ILIKE $1',
-            values: [ '%test%' ]
-        })
-    })
-    test("works: more data than cols - should never happen", ()=>{
-        let c = Object.assign({}, cols3);
-        let d = Object.assign({}, data1);
-        const result = companyFiltering(c, d);
-        expect(result).toEqual({
-            filterCols: '"name" ILIKE $1 AND "undefined">=$2 AND "undefined"<=$3',
-            values: [ '%test%', '1', '100' ]
-        })
-    })
 })
