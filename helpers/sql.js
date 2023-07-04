@@ -1,4 +1,4 @@
-const { BadRequestError } = require("../expressError");
+const { BadRequestError, ExpressError } = require("../expressError");
 
 /** Creates a string for use in a query and an array of values
  * 
@@ -34,13 +34,11 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
 
 /** Creates a string of filter conditions and an array of values to query companies table
  * 
- * colNames is a dictionary object:     { name: "col_name_in_DB", ... }
- * dataToFilter is a dictionary object: { name: "value", ... }
+ * colNames is a dictionary object:     { name1: "DB_col_1", name2: "DB_col_2", ... }
+ * dataToFilter is a dictionary object: { name1: "value1", name2: "value2", ... }
+ * action is a dictionary object: { name1: "LIKE", name2: "=", ... }
  * 
- * Possible columns to filter by are:
- *  name - using ILIKE for case-insesetive filtering of company names
- *  emin - num_employees minimum
- *  emax - num_employees maximum
+ * NOTE: All 3 objects MUST have keys that match. (parallel keys)
  * 
  * Returns an object like:
  *      {
@@ -49,29 +47,30 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
  *      }
 */
 
-function companyFiltering(colNames, dataToFilter){
-
+function sqlForFiltering(colNames, dataToFilter, action){
+  const supported = ["ILIKE", "=", "<>", "<", ">", "<=", ">="]
   const keys = Object.keys(colNames);
 
-  // Ensure proper format for ILIKE
-  if(keys.includes("name")){
-    dataToFilter.name = `%${dataToFilter.name}%`
-  }
+  const filterCols = keys.map((curCol, idx) => {
+    const curAction = action[keys[idx]];
+    // In case of coder error, but not too much info given for security
+    if(!supported.includes(curAction)){
+      throw new ExpressError(`Internal Error: Invalid action on ${keys[idx]}`, 500)
+    }
+    // Ensure partial matching
+    if(["ILIKE"].includes(curAction)){
+      dataToFilter[keys[idx]] = `%${ dataToFilter[ keys[idx] ] }%` 
+    }
+
+    return `"${colNames[curCol]}" ${curAction} $${idx + 1}`;
+  });
+  
   const values = Object.keys(colNames).map(key=>dataToFilter[key]);
 
-  const filterCols = keys.map((curCol, idx)=>{
-    let action;
-         if(keys[idx] === 'name') action = " ILIKE ";
-    else if(keys[idx] === 'emin') action = ">=";
-    else if(keys[idx] === 'emax') action = "<=";
-
-    return `"${colNames[curCol]}"${action}$${idx+1}`
-  })
-  
   return {
     filterCols: filterCols.join(" AND "),
     values
   }
 }
 
-module.exports = { sqlForPartialUpdate, companyFiltering };
+module.exports = { sqlForPartialUpdate, sqlForFiltering };
