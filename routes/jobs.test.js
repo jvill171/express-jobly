@@ -110,7 +110,7 @@ describe("GET /jobs", ()=>{
                     title: 'j3',
                     salary: 50000,
                     equity: null,
-                    companyHandle: 'c2',
+                    companyHandle: 'c3',
                 }),
                 expect.objectContaining({
                     id: expect.any(Number),
@@ -202,7 +202,7 @@ describe("GET /jobs", ()=>{
                     title: 'j3',
                     salary: 50000,
                     equity: null,
-                    companyHandle: 'c2',
+                    companyHandle: 'c3',
                 }),
                 expect.objectContaining({
                     id: expect.any(Number),
@@ -276,7 +276,7 @@ describe("GET /jobs", ()=>{
                 title: 'j3',
                 salary: 50000,
                 equity: null,
-                companyHandle: 'c2'
+                companyHandle: 'c3'
               },
               {
                 id: expect.any(Number),
@@ -301,7 +301,6 @@ describe("GET /jobs", ()=>{
             await request(app).get("/companies?smin=&t=j");
             // fail()
         } catch(err){
-            console.log(err)
             expect(err instanceof ExpressError).toBeTruthy()
         }
     })
