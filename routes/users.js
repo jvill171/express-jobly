@@ -8,6 +8,7 @@ const express = require("express");
 const { ensureLoggedIn, ensureAdminLoggedIn, ensureOwnerOrAdmin, preventGainAdmin } = require("../middleware/auth");
 const { BadRequestError } = require("../expressError");
 const User = require("../models/user");
+const Application = require("../models/application");
 const { createToken } = require("../helpers/tokens");
 const userNewSchema = require("../schemas/userNew.json");
 const userUpdateSchema = require("../schemas/userUpdate.json");
@@ -104,6 +105,20 @@ router.patch("/:username", ensureLoggedIn, ensureOwnerOrAdmin, preventGainAdmin,
   }
 });
 
+
+/** POST /[username]/jobs/[job_id] => { applied: jobId }
+ * 
+ * Authorization required: as either Owner or Admin
+*/
+router.post("/:username/jobs/:id", ensureLoggedIn, ensureOwnerOrAdmin, async(req, res, next)=>{
+  try{
+    let applied = await Application.create(req.params);
+
+    return res.json({applied})
+  } catch(err){
+    return next(err)
+  }
+})
 
 /** DELETE /[username]  =>  { deleted: username }
  *

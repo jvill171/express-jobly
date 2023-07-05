@@ -334,6 +334,55 @@ describe("PATCH /users/:username", () => {
 
 });
 
+/************************************** POST /users/:username/jobs/:id */
+describe("POST /users/:username/jobs/:id", ()=>{
+  let id;
+  beforeAll(async()=>{
+    id = (await db.query(`SELECT id FROM jobs LIMIT 1`)).rows[0].id
+  })
+
+  test("works: make app as owner", async()=>{
+    const user = "u1"
+    const resp = await request(app)
+        .post(`/users/${user}/jobs/${id}`)
+        .set("authorization", `Bearer ${u1Token}`);
+    expect(resp.body).toEqual({ applied: expect.any(Number) })
+  })
+  
+  test("works: admin make app for someone else", async()=>{
+    const user = "u1"
+    const resp = await request(app)
+        .post(`/users/${user}/jobs/${id}`)
+        .set("authorization", `Bearer ${u2Token}`);
+    console.log(resp.body)
+    expect(resp.body).toEqual({ applied: expect.any(Number) })
+  })
+
+  test("works: admin make app for self", async()=>{
+    const user = "u2"
+    const resp = await request(app)
+        .post(`/users/${user}/jobs/${id}`)
+        .set("authorization", `Bearer ${u2Token}`);
+    expect(resp.body).toEqual({ applied: expect.any(Number) })
+  })
+
+  test("unauth: user make app for another user", async()=>{
+    const user = "u2"
+    const resp = await request(app)
+        .post(`/users/${user}/jobs/${id}`)
+        .set("authorization", `Bearer ${u1Token}`);
+    console.log(resp.body)
+    expect(resp.statusCode).toEqual(401)
+  })
+  
+  test("unauth: anon make app for any user", async()=>{
+    const user = "u2"
+    const resp = await request(app)
+        .post(`/users/${user}/jobs/${id}`);
+    expect(resp.statusCode).toEqual(401)
+  })
+})
+
 /************************************** DELETE /users/:username */
 
 describe("DELETE /users/:username", function () {
