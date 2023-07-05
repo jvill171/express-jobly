@@ -9,7 +9,6 @@ const {
   commonAfterEach,
   commonAfterAll,
 } = require("./_testCommon");
-const { sqlForPartialUpdate, sqlForFiltering } = require("../helpers/sql.js");
 
 beforeAll(commonBeforeAll);
 beforeEach(commonBeforeEach);
@@ -233,7 +232,7 @@ describe("filter", ()=>{
                     title: 'J3',
                     salary: 60000,
                     equity: '0.5',
-                    companyHandle: 'c2'
+                    companyHandle: 'c3'
                 }),
                 expect.objectContaining({
                     id: expect.any(Number),
@@ -288,7 +287,7 @@ describe("filter", ()=>{
                 title: 'J3',
                 salary: 60000,
                 equity: '0.5',
-                companyHandle: 'c2'
+                companyHandle: 'c3'
             }),
             expect.objectContaining({
                 id: expect.any(Number),
@@ -333,7 +332,7 @@ describe("filter", ()=>{
                     title: 'J3',
                     salary: 60000,
                     equity: '0.5',
-                    companyHandle: 'c2'
+                    companyHandle: 'c3'
                 }),
                 expect.objectContaining({
                     id: expect.any(Number),
