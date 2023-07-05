@@ -4,7 +4,7 @@ const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
 const { sqlForPartialUpdate, sqlForFiltering } = require("../helpers/sql");
 
-/** Related functions for companies. */
+/** Related functions for jobs. */
 
 class Job {
 
@@ -83,7 +83,7 @@ class Job {
             [id]);
         const job = jobRes.rows[0];
 
-        if(!job) throw new NotFoundError(`Not job: ${id}`);
+        if(!job) throw new NotFoundError(`No job found: ${id}`);
 
         return job;
     }
