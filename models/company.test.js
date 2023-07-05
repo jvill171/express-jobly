@@ -92,12 +92,29 @@ describe("findAll", function () {
 describe("get", function () {
   test("works", async function () {
     let company = await Company.get("c1");
-    expect(company).toEqual({
+    
+    expect(company.jobs.length).toEqual(2)
+    expect(company).toEqual(expect.objectContaining({
       handle: "c1",
       name: "C1",
       description: "Desc1",
       numEmployees: 1,
       logoUrl: "http://c1.img",
+      jobs: expect.any(Array)
+    }));
+    
+  });
+
+  test("works: company w/o jobs", async function () {
+    let company = await Company.get("c2");
+    expect(company.jobs.length).toEqual(0)
+    expect(company).toEqual({
+      handle: "c2",
+      name: "C2",
+      description: "Desc2",
+      numEmployees: 2,
+      logoUrl: "http://c2.img",
+      jobs: []
     });
   });
 
