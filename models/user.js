@@ -98,18 +98,27 @@ class User {
 
   /** Find all users.
    *
-   * Returns [{ username, first_name, last_name, email, is_admin }, ...]
+   * Returns [{ username, first_name, last_name, email, is_admin, jobs: [jobId, ...] }, ...]
+   * 
    **/
 
   static async findAll() {
+
+    // NOTE: By default, an empty array from JSON_AGG = [null], therefore
+    // COALESCE & FILTER are used to ensure an empty array = []
     const result = await db.query(
-          `SELECT username,
+          `SELECT u.username AS "username",
                   first_name AS "firstName",
                   last_name AS "lastName",
                   email,
-                  is_admin AS "isAdmin"
-           FROM users
-           ORDER BY username`,
+                  is_admin AS "isAdmin",
+                  COALESCE( jsonb_agg(job_id)
+                    FILTER (WHERE job_id IS NOT NULL),'[]'::jsonb)
+                      AS jobs
+          FROM users AS u
+          LEFT JOIN applications AS a ON (u.username = a.username)
+          GROUP BY u.username, first_name, last_name, email, is_admin
+          ORDER BY u.username`,
     );
 
     return result.rows;
@@ -117,12 +126,11 @@ class User {
 
   /** Given a username, return data about user.
    *
-   * Returns { username, first_name, last_name, is_admin, jobs }
+   * Returns { username, first_name, last_name, is_admin, jobs: [jobId, ...] }
    *   where jobs is { id, title, company_handle, company_name, state }
    *
    * Throws NotFoundError if user not found.
    **/
-
   static async get(username) {
     const userRes = await db.query(
           `SELECT username,
@@ -132,12 +140,18 @@ class User {
                   is_admin AS "isAdmin"
            FROM users
            WHERE username = $1`,
-        [username],
+        [username]
     );
 
     const user = userRes.rows[0];
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
+
+
+    const jobsRes = await db.query(
+      `SELECT job_id FROM applications WHERE username = $1`, [username]);
+      
+    user.jobs = jobsRes.rows.map(a => a.job_id)
 
     return user;
   }
