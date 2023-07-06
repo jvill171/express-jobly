@@ -126,6 +126,7 @@ describe("GET /users", function () {
           lastName: "U1L",
           email: "user1@user.com",
           isAdmin: false,
+          jobs:[]
         },
         {
           username: "u2",
@@ -133,6 +134,7 @@ describe("GET /users", function () {
           lastName: "U2L",
           email: "user2@user.com",
           isAdmin: true,
+          jobs:[]
         },
         {
           username: "u3",
@@ -140,6 +142,7 @@ describe("GET /users", function () {
           lastName: "U3L",
           email: "user3@user.com",
           isAdmin: false,
+          jobs:[]
         },
       ],
     });
@@ -178,6 +181,7 @@ describe("GET /users/:username", function () {
         lastName: "U1L",
         email: "user1@user.com",
         isAdmin: false,
+        jobs:[]
       },
     });
   });
@@ -199,6 +203,7 @@ describe("GET /users/:username", function () {
         lastName: "U2L",
         email: "user2@user.com",
         isAdmin: true,
+        jobs:[]
       },
     });
   });
@@ -214,6 +219,7 @@ describe("GET /users/:username", function () {
         lastName: "U1L",
         email: "user1@user.com",
         isAdmin: false,
+        jobs:[]
       },
     });
   });
@@ -354,7 +360,6 @@ describe("POST /users/:username/jobs/:id", ()=>{
     const resp = await request(app)
         .post(`/users/${user}/jobs/${id}`)
         .set("authorization", `Bearer ${u2Token}`);
-    console.log(resp.body)
     expect(resp.body).toEqual({ applied: expect.any(Number) })
   })
 
@@ -371,7 +376,6 @@ describe("POST /users/:username/jobs/:id", ()=>{
     const resp = await request(app)
         .post(`/users/${user}/jobs/${id}`)
         .set("authorization", `Bearer ${u1Token}`);
-    console.log(resp.body)
     expect(resp.statusCode).toEqual(401)
   })
   

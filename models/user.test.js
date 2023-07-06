@@ -109,6 +109,14 @@ describe("register", function () {
 
 describe("findAll", function () {
   test("works", async function () {
+    const id = (await db.query(`SELECT id FROM jobs LIMIT 1`)).rows[0].id
+
+    await db.query(
+      `INSERT
+       INTO applications (username, job_id)
+       VALUES ($1, $2)`,
+       ['u2', id])
+
     const users = await User.findAll();
     expect(users).toEqual([
       {
@@ -117,6 +125,7 @@ describe("findAll", function () {
         lastName: "U1L",
         email: "u1@email.com",
         isAdmin: false,
+        jobs:expect.any(Array)
       },
       {
         username: "u2",
@@ -124,8 +133,12 @@ describe("findAll", function () {
         lastName: "U2L",
         email: "u2@email.com",
         isAdmin: false,
+        jobs:expect.any(Array)
       },
     ]);
+
+    expect(users[0].jobs.length).toEqual(0)
+    expect(users[1].jobs.length).toEqual(1)
   });
 });
 
@@ -140,6 +153,7 @@ describe("get", function () {
       lastName: "U1L",
       email: "u1@email.com",
       isAdmin: false,
+      jobs: []
     });
   });
 
